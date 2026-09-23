@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Өлшем бірліктер</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav>
+            <a href="index.html">Басты бет</a>
+            <a href="formulas.html">Формулалар (100+)</a>
+            <a href="converter.html" class="active">Өлшем бірліктер</a>
+            <a href="experiments.html">Эксперименттер</a>
+            <a href="calculator.html">Механикалық калькулятор</a>
+            <a href="chat.html">Ғалымдар чаты</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>🔄 Өлшем бірліктерді түрлендіргіш</h1>
+        <p>Метрді километрге, граммды килограммға және т.б. ауыстырыңыз.</p>
+
+        <div style="background:rgba(15,23,42,0.5); padding:20px; border-radius:10px;">
+            <label>Шама түрі:</label>
+            <select id="conv-type" onchange="updateUnits()">
+                <option value="length">Ұзындық (м, км, см, мм, миля)</option>
+                <option value="mass">Масса (кг, г, т)</option>
+                <option value="time">Уақыт (с, мин, сағ)</option>
+            </select>
+
+            <label>Мән:</label>
+            <input type="number" id="conv-val" placeholder="Сан енгізіңіз" value="1">
+
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Қайдан:</label>
+                    <select id="conv-from"></select>
+                </div>
+                <div style="flex:1;">
+                    <label>Қайда:</label>
+                    <select id="conv-to"></select>
+                </div>
+            </div>
+
+            <button onclick="convert()" style="margin-top:15px; width:100%;">Ауыстыру</button>
+            <h3 id="conv-res" style="margin-top:15px; color:#38bdf8;">Нәтиже: </h3>
+        </div>
+    </div>
+
+    <script>
+        if (!localStorage.getItem('physx_current_user')) window.location.href = 'login.html';
+
+        const unitsData = {
+            length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.34 },
+            mass: { kg: 1, g: 0.001, t: 1000 },
+            time: { s: 1, min: 60, h: 3600 }
+        };
+
+        function updateUnits() {
+            const type = document.getElementById('conv-type').value;
+            const fromSel = document.getElementById('conv-from');
+            const toSel = document.getElementById('conv-to');
+            fromSel.innerHTML = '';
+            toSel.innerHTML = '';
+
+            for (let u in unitsData[type]) {
+                fromSel.innerHTML += `<option value="${u}">${u}</option>`;
+                toSel.innerHTML += `<option value="${u}">${u}</option>`;
+            }
+        }
+
+        function convert() {
+            const type = document.getElementById('conv-type').value;
+            const val = parseFloat(document.getElementById('conv-val').value);
+            const from = document.getElementById('conv-from').value;
+            const to = document.getElementById('conv-to').value;
+
+            if (isNaN(val)) {
+                document.getElementById('conv-res').innerText = "Дұрыс сан енгізіңіз!";
+                return;
+            }
+
+            let baseVal = val * unitsData[type][from];
+            let result = baseVal / unitsData[type][to];
+            document.getElementById('conv-res').innerText = `Нәтиже: ${val} ${from} = ${result} ${to}`;
+        }
+
+        updateUnits();
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Тіркелу</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav><a href="login.html">Кіру</a></nav>
+    </header>
+
+    <div class="auth-box">
+        <h2>Жаңа аккаунт ашу</h2>
+        <p>Деректер құрылғы жадында сақталады.</p>
+        
+        <input type="text" id="reg-name" placeholder="Аты-жөніңіз (Чатта көрінетін ат)">
+        <input type="text" id="reg-login" placeholder="Логин">
+        <input type="password" id="reg-pass" placeholder="Құпия сөз">
+        <button onclick="registerUser()" style="width:100%; background: #059669;">Тіркелу</button>
+        
+        <p style="margin-top: 15px; text-align: center;">
+            Аккаунтыңыз бар ма? <a href="login.html" style="color: #38bdf8;">Кіру</a>
+        </p>
+        
+        <div id="reg-error" class="hidden error-msg"></div>
+        <div id="reg-success" class="hidden success-msg"></div>
+    </div>
+
+    <script>
+        function registerUser() {
+            const name = document.getElementById('reg-name').value.trim();
+            const login = document.getElementById('reg-login').value.trim();
+            const pass = document.getElementById('reg-pass').value.trim();
+            const errBox = document.getElementById('reg-error');
+            const succBox = document.getElementById('reg-success');
+
+            errBox.classList.add('hidden');
+            succBox.classList.add('hidden');
+
+            if (!name || !login || !pass) {
+                errBox.innerText = "Барлық өрістерді толтырыңыз!";
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            if (users.some(u => u.login === login)) {
+                errBox.innerText = "Бұл логин бұрын тіркелген!";
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            users.push({
+                name: name,
+                login: login,
+                pass: pass,
+                friends: [],
+                requests: [],
+                chats: {},
+                experiments: []
+            });
+
+            localStorage.setItem('physx_users', JSON.stringify(users));
+            succBox.innerText = "Тіркелу сәтті! Кіру бетіне өтуде...";
+            succBox.classList.remove('hidden');
+
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

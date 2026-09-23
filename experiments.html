@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Эксперименттер</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav>
+            <a href="index.html">Басты бет</a>
+            <a href="formulas.html">Формулалар (100+)</a>
+            <a href="converter.html">Өлшем бірліктер</a>
+            <a href="experiments.html" class="active">Эксперименттер</a>
+            <a href="calculator.html">Механикалық калькулятор</a>
+            <a href="chat.html">Ғалымдар чаты</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>🧪 Эксперименттер орталығы</h1>
+        <p>Өз тәжірибелеріңізді жазып, жадта сақтаңыз.</p>
+        
+        <input type="text" id="exp-name" placeholder="Эксперимент атауы">
+        <textarea id="exp-desc" placeholder="Барысы мен сипаттамасы..."></textarea>
+        <input type="text" id="exp-res" placeholder="Алынған нәтиже">
+        <button onclick="addExp()">Экспериментті сақтау</button>
+
+        <div id="exp-list" style="margin-top:25px;"></div>
+    </div>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('physx_current_user'));
+        if (!currentUser) window.location.href = 'login.html';
+
+        function addExp() {
+            const name = document.getElementById('exp-name').value.trim();
+            const desc = document.getElementById('exp-desc').value.trim();
+            const res = document.getElementById('exp-res').value.trim();
+
+            if (!name || !desc) {
+                alert('Атауы мен сипаттамасын жазыңыз!');
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+
+            if (!me.experiments) me.experiments = [];
+            me.experiments.push({ name, desc, res });
+
+            localStorage.setItem('physx_users', JSON.stringify(users));
+            document.getElementById('exp-name').value = '';
+            document.getElementById('exp-desc').value = '';
+            document.getElementById('exp-res').value = '';
+            loadExp();
+        }
+
+        function loadExp() {
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let listDiv = document.getElementById('exp-list');
+            listDiv.innerHTML = '<h2>Барлық сақталған эксперименттер</h2>';
+
+            let allExps = [];
+            users.forEach(u => {
+                if (u.experiments) {
+                    u.experiments.forEach(e => {
+                        allExps.push({ ...e, author: u.name });
+                    });
+                }
+            });
+
+            if (allExps.length === 0) {
+                listDiv.innerHTML += '<p>Әзірге эксперименттер жоқ.</p>';
+                return;
+            }
+
+            allExps.reverse().forEach(e => {
+                listDiv.innerHTML += `
+                    <div style="background:rgba(15,23,42,0.5); padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid #34d399;">
+                        <h4>${e.name}</h4>
+                        <p>${e.desc}</p>
+                        <p style="color:#34d399;">Нәтиже: ${e.res || 'Көрсетілмеген'}</p>
+                        <small style="color:#38bdf8;">Авторы: ${e.author}</small>
+                    </div>
+                `;
+            });
+        }
+        loadExp();
+    </script>
+</body>
+</html>
