@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Басты бет</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav>
+            <a href="index.html" class="active">Басты бет</a>
+            <a href="formulas.html">Формулалар (100+)</a>
+            <a href="converter.html">Өлшем бірліктер</a>
+            <a href="experiments.html">Эксперименттер</a>
+            <a href="calculator.html">Механикалық калькулятор</a>
+            <a href="chat.html">Ғалымдар чаты</a>
+        </nav>
+    </header>
+
+    <div class="container" id="logged-in-container">
+        <h1>Қош келдіңіз, <span id="user-display-name" style="color:#38bdf8;"></span>!</h1>
+        <p>PhysX — физика саласындағы барлық формулалар мен есептеулерге арналған орталық.</p>
+
+        <div style="background: rgba(15,23,42,0.5); padding: 20px; border-radius: 10px; margin-top: 20px;">
+            <h3>📬 Достық сұраныстары</h3>
+            <div id="requests-container">
+                <p>Жаңа сұраныстар жоқ.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 25px;">
+            <button onclick="logout()" style="background: #ef4444;">Жүйеден шығу</button>
+        </div>
+    </div>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('physx_current_user'));
+
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('user-display-name').innerText = currentUser.name;
+            renderRequests();
+        }
+
+        function renderRequests() {
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let freshUser = users.find(u => u.login === currentUser.login);
+            if (!freshUser) return;
+
+            const container = document.getElementById('requests-container');
+            if (!freshUser.requests || freshUser.requests.length === 0) {
+                container.innerHTML = '<p>Жаңа сұраныстар жоқ.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            freshUser.requests.forEach((reqFromLogin) => {
+                let sender = users.find(u => u.login === reqFromLogin);
+                let senderName = sender ? sender.name : reqFromLogin;
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(30,41,59,0.8); padding:10px; border-radius:8px; margin-bottom:8px;">
+                        <span><b>${senderName}</b> сізді дос болуға шақырды!</span>
+                        <button onclick="acceptRequest('${reqFromLogin}')" style="background:#059669; padding:6px 12px; font-size:0.9rem;">Қабылдау</button>
+                    </div>
+                `;
+            });
+        }
+
+        function acceptRequest(fromLogin) {
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+            let sender = users.find(u => u.login === fromLogin);
+
+            if (me && sender) {
+                me.requests = me.requests.filter(l => l !== fromLogin);
+                if (!me.friends.includes(fromLogin)) me.friends.push(fromLogin);
+                if (!sender.friends.includes(me.login)) sender.friends.push(me.login);
+
+                localStorage.setItem('physx_users', JSON.stringify(users));
+                localStorage.setItem('physx_current_user', JSON.stringify(me));
+                alert('Достық қабылданды!');
+                renderRequests();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('physx_current_user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

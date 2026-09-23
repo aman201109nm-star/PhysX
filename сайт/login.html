@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Жүйеге кіру</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav><a href="register.html">Тіркелу</a></nav>
+    </header>
+
+    <div class="auth-box">
+        <h2>Жүйеге кіру</h2>
+        <p>Логин мен құпия сөзді енгізіңіз.</p>
+        
+        <input type="text" id="login-val" placeholder="Логин">
+        <input type="password" id="pass-val" placeholder="Құпия сөз">
+        <button onclick="loginUser()" style="width:100%;">Кіру</button>
+        
+        <p style="margin-top: 15px; text-align: center;">
+            Аккаунтыңыз жоқ па? <a href="register.html" style="color: #38bdf8;">Тіркелу</a>
+        </p>
+        
+        <div id="login-error" class="hidden error-msg"></div>
+    </div>
+
+    <script>
+        function loginUser() {
+            const login = document.getElementById('login-val').value.trim();
+            const pass = document.getElementById('pass-val').value.trim();
+            const errBox = document.getElementById('login-error');
+
+            errBox.classList.add('hidden');
+
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            const foundUser = users.find(u => u.login === login && u.pass === pass);
+
+            if (!foundUser) {
+                errBox.innerText = "Логин немесе пароль қате! Дұрыс емес немесе тіркелмеген.";
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            localStorage.setItem('physx_current_user', JSON.stringify(foundUser));
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

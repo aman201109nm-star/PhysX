@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Механикалық калькулятор</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .calc-grid button {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+        }
+        .calc-grid button:hover {
+            background: #0284c7;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav>
+            <a href="index.html">Басты бет</a>
+            <a href="formulas.html">Формулалар (100+)</a>
+            <a href="converter.html">Өлшем бірліктер</a>
+            <a href="experiments.html">Эксперименттер</a>
+            <a href="calculator.html" class="active">Механикалық калькулятор</a>
+            <a href="chat.html">Ғалымдар чаты</a>
+        </nav>
+    </header>
+
+    <div class="container" style="max-width: 450px;">
+        <h1>🧮 Механикалық калькулятор</h1>
+        <p>Инженерлік және стандартты есептеулер.</p>
+
+        <input type="text" id="calc-screen" readonly style="font-size: 1.6rem; text-align: right; background: #0f172a; height: 50px;">
+
+        <div class="calc-grid">
+            <button onclick="clearScreen()" style="background:#ef4444;">C</button>
+            <button onclick="deleteLast()">⌫</button>
+            <button onclick="appendValue('(')">(</button>
+            <button onclick="appendValue(')')">)</button>
+
+            <button onclick="appendValue('7')">7</button>
+            <button onclick="appendValue('8')">8</button>
+            <button onclick="appendValue('9')">9</button>
+            <button onclick="appendValue('/')">/</button>
+
+            <button onclick="appendValue('4')">4</button>
+            <button onclick="appendValue('5')">5</button>
+            <button onclick="appendValue('6')">6</button>
+            <button onclick="appendValue('*')">*</button>
+
+            <button onclick="appendValue('1')">1</button>
+            <button onclick="appendValue('2')">2</button>
+            <button onclick="appendValue('3')">3</button>
+            <button onclick="appendValue('-')">-</button>
+
+            <button onclick="appendValue('0')">0</button>
+            <button onclick="appendValue('.')">.</button>
+            <button onclick="appendValue('**')">^</button>
+            <button onclick="appendValue('+')">+</button>
+        </div>
+        <button onclick="calculate()" style="width:100%; margin-top:10px; background:#059669; font-size:1.2rem; padding:12px;">Нәтижесін табу (=)</button>
+    </div>
+
+    <script>
+        if (!localStorage.getItem('physx_current_user')) window.location.href = 'login.html';
+
+        function appendValue(val) {
+            document.getElementById('calc-screen').value += val;
+        }
+
+        function clearScreen() {
+            document.getElementById('calc-screen').value = '';
+        }
+
+        function deleteLast() {
+            let screen = document.getElementById('calc-screen');
+            screen.value = screen.value.slice(0, -1);
+        }
+
+        function calculate() {
+            let screen = document.getElementById('calc-screen');
+            let expr = screen.value.trim();
+            if (!expr) return;
+
+            try {
+                // Қауіпсіз және тұрақты есептеу логикасы
+                let sanitizedExpr = expr.replace(/[^0-9+\-*/().\s*]/g, '');
+                let res = Function('"use strict"; return (' + sanitizedExpr + ')')();
+                
+                if (res === undefined || isNaN(res) || !isFinite(res)) {
+                    screen.value = 'Мән дұрыс емес';
+                } else {
+                    screen.value = Number(res.toFixed(8));
+                }
+            } catch (e) {
+                // 'Қате!' сөзінің орнына түсінікті хабарлама немесе экранды тазарту
+                screen.value = 'Өрнек қате';
+            }
+        }
+    </script>
+</body>
+</html>

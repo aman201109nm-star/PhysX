@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysX - Ғалымдар чаты</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">PhysX</a>
+        <nav>
+            <a href="index.html">Басты бет</a>
+            <a href="formulas.html">Формулалар (100+)</a>
+            <a href="converter.html">Өлшем бірліктер</a>
+            <a href="experiments.html">Эксперименттер</a>
+            <a href="calculator.html">Механикалық калькулятор</a>
+            <a href="chat.html" class="active">Ғалымдар чаты</a>
+        </nav>
+    </header>
+
+    <div class="container" style="display: flex; gap: 20px;">
+        <div style="flex: 1; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 15px;">
+            <h3>🔍 Ғалымды іздеу</h3>
+            <input type="text" id="search-input" placeholder="Атын жазыңыз..." onkeyup="searchUsers()">
+            <div id="search-results" style="margin-bottom: 15px;"></div>
+
+            <h3>👥 Менің достарым</h3>
+            <div id="friends-list"></div>
+        </div>
+
+        <div style="flex: 2; display: flex; flex-direction: column;">
+            <h3 id="chat-title">Досыңызды таңдаңыз</h3>
+            <div id="chat-box" style="height: 300px; overflow-y: auto; background: rgba(15,23,42,0.6); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
+                <p style="text-align:center; color:#94a3b8; margin-top:100px;">Сөйлесу үшін сол жақтан досыңызды басыңыз.</p>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="chat-msg" placeholder="Хабарлама жазыңыз..." style="margin-bottom:0;" disabled>
+                <button onclick="sendChatMessage()" id="send-btn" style="width: 100px; margin-bottom:0;" disabled>Жіберу</button>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <button onclick="insertMyExperiment()" style="background:#059669; font-size:0.85rem; padding:6px;" id="insert-exp-btn" disabled>Менің экспериментімді тіркеу</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('physx_current_user'));
+        if (!currentUser) window.location.href = 'login.html';
+
+        let activeFriendLogin = null;
+
+        function searchUsers() {
+            let query = document.getElementById('search-input').value.toLowerCase().trim();
+            let resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            if (!query) return;
+
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+
+            users.forEach(u => {
+                if (u.login !== currentUser.login && u.name.toLowerCase().includes(query)) {
+                    let isFriend = me.friends && me.friends.includes(u.login);
+                    let btnText = isFriend ? 'Доссыз' : 'Дос болуға шақыру';
+                    let btnDisabled = isFriend ? 'disabled' : '';
+
+                    resultsDiv.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.8); padding:8px; border-radius:6px; margin-bottom:6px;">
+                            <span>${u.name}</span>
+                            <button onclick="sendFriendRequest('${u.login}')" ${btnDisabled} style="padding:4px 8px; font-size:0.8rem;">${btnText}</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function sendFriendRequest(targetLogin) {
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let targetUser = users.find(u => u.login === targetLogin);
+
+            if (targetUser) {
+                if (!targetUser.requests) targetUser.requests = [];
+                if (!targetUser.requests.includes(currentUser.login)) {
+                    targetUser.requests.push(currentUser.login);
+                    localStorage.setItem('physx_users', JSON.stringify(users));
+                    alert('Дос болуға шақыру жіберілді!');
+                } else {
+                    alert('Бұл адамға бұрын сұраныс жіберілген!');
+                }
+            }
+        }
+
+        function loadFriends() {
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+            let listDiv = document.getElementById('friends-list');
+            listDiv.innerHTML = '';
+
+            if (!me.friends || me.friends.length === 0) {
+                listDiv.innerHTML = '<p style="font-size:0.9rem;">Әзірге достар жоқ.</p>';
+                return;
+            }
+
+            me.friends.forEach(fLogin => {
+                let friend = users.find(u => u.login === fLogin);
+                if (friend) {
+                    listDiv.innerHTML += `
+                        <div onclick="openChat('${friend.login}', '${friend.name}')" style="background:rgba(30,41,59,0.8); padding:10px; border-radius:6px; margin-bottom:6px; cursor:pointer;">
+                            <b>${friend.name}</b>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function openChat(friendLogin, friendName) {
+            activeFriendLogin = friendLogin;
+            document.getElementById('chat-title').innerText = `${friendName} - Жеке чат`;
+            document.getElementById('chat-msg').disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            document.getElementById('insert-exp-btn').disabled = false;
+            loadMessages();
+        }
+
+        function sendChatMessage() {
+            let text = document.getElementById('chat-msg').value.trim();
+            if (!text || !activeFriendLogin) return;
+
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+            let friend = users.find(u => u.login === activeFriendLogin);
+
+            if (!me.chats) me.chats = {};
+            if (!me.chats[activeFriendLogin]) me.chats[activeFriendLogin] = [];
+            me.chats[activeFriendLogin].push({ sender: currentUser.login, text: text });
+
+            if (!friend.chats) friend.chats = {};
+            if (!friend.chats[currentUser.login]) friend.chats[currentUser.login] = [];
+            friend.chats[currentUser.login].push({ sender: currentUser.login, text: text });
+
+            localStorage.setItem('physx_users', JSON.stringify(users));
+            localStorage.setItem('physx_current_user', JSON.stringify(me));
+
+            document.getElementById('chat-msg').value = '';
+            loadMessages();
+        }
+
+        function insertMyExperiment() {
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+
+            if (!me.experiments || me.experiments.length === 0) {
+                alert('Сізде сақталған эксперименттер жоқ!');
+                return;
+            }
+
+            let lastExp = me.experiments[me.experiments.length - 1];
+            document.getElementById('chat-msg').value = `[Эксперимент]: ${lastExp.name} — ${lastExp.desc} (Нәтиже: ${lastExp.res})`;
+        }
+
+        function loadMessages() {
+            if (!activeFriendLogin) return;
+
+            let users = JSON.parse(localStorage.getItem('physx_users')) || [];
+            let me = users.find(u => u.login === currentUser.login);
+            let box = document.getElementById('chat-box');
+            box.innerHTML = '';
+
+            let chatHistory = (me.chats && me.chats[activeFriendLogin]) ? me.chats[activeFriendLogin] : [];
+            if (chatHistory.length === 0) {
+                box.innerHTML = '<p style="text-align:center; color:#94a3b8;">Әзірге хабарламалар жоқ.</p>';
+                return;
+            }
+
+            chatHistory.forEach(msg => {
+                let isMe = msg.sender === currentUser.login;
+                let align = isMe ? 'text-align:right; color:#38bdf8;' : 'text-align:left; color:#f8fafc;';
+                box.innerHTML += `
+                    <div style="margin-bottom:8px; ${align}">
+                        <p style="background:rgba(30,41,59,0.9); display:inline-block; padding:8px 12px; border-radius:8px; max-width:70%; text-align:left;">${msg.text}</p>
+                    </div>
+                `;
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        loadFriends();
+    </script>
+</body>
+</html>
